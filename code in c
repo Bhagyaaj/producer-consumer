@@ -1,0 +1,83 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct 
+{
+    int value;
+} semaphore;
+
+semaphore mutex, full, empty;
+int x = 0;
+
+void wait(semaphore *s)
+{
+    while (s->value <= 0);
+    s->value--;
+}
+
+void signal(semaphore *s)
+{
+    s->value++;
+}
+
+void producer()
+{
+    wait(&mutex);
+    signal(&full);
+    wait(&empty);
+    x++;
+    printf("\nProducer produces item %d\n", x);
+    signal(&mutex);
+}
+
+void consumer()
+{
+    wait(&mutex);
+    wait(&full);
+    signal(&empty);
+    printf("\nConsumer consumes item %d\n", x);
+    x--;
+    signal(&mutex);
+}
+
+int main()
+{
+    int n, i;
+    mutex.value = 1;
+    full.value = 0;
+    empty.value = 10;
+    for (i = 1; i > 0; i++)
+    {
+        printf("\n---Menu---\n1.Producer\n2.Consumer\n3.Exit\n");
+        printf("\nEnter choice:");
+        scanf("%d", &n);
+        switch (n)
+        {
+        case 1:
+            if (mutex.value == 1 && empty.value != 0)
+            {
+                producer();
+            }
+            else
+            {
+                printf("Buffer is full!!\n");
+            }
+            break;
+        case 2:
+            if (mutex.value == 1 && full.value != 0)
+            {
+                consumer();
+            }
+            else
+            {
+                printf("Buffer is empty!!\n");
+            }
+            break;
+        case 3:
+            exit(0);
+            break;
+        }
+    }
+
+    return 0;
+}
